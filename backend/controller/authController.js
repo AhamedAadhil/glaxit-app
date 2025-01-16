@@ -5,7 +5,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { connectDB } from "../config/db.js";
-// dcdcd
+/*
+Controller for login of company and super admin
+localhost:3000/api/auth/login
+*/
 export const login = (req, res) => {
   // get user email from request body
   const { email } = req.body;
@@ -25,13 +28,13 @@ export const login = (req, res) => {
         if (!decryptedPassword) {
           return res
             .status(401)
-            .json({ message: "Invalid username or password" });
+            .json({ message: "Invalid username or password", success: false });
         }
         // check if account is active
         if (result[0].status === 0) {
           return res
             .status(401)
-            .json({ message: "Your account is not active" });
+            .json({ message: "Your account is not active", success: false });
         }
         // generate jwt token
         const token = jwt.sign(
@@ -41,22 +44,36 @@ export const login = (req, res) => {
             expiresIn: "1h",
           }
         );
+        // check if the account is admin account or not
         const isAdmin = result[0].isadmin;
         const { password, isadmin, status, ...rest } = result[0];
+        // set cookie with token
+        res.cookie("token", token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: "strict",
+          maxAge: 3600000, // 1 hour
+        });
         res.status(200).json({
           info: rest,
+          role: isAdmin === 0 ? "Company" : "Super Admin",
           token,
           message: `Welcome ${isAdmin ? "Admin!" : "!"}`,
+          success: true,
         });
       } else {
         return res
           .status(401)
-          .json({ message: "Invalid username or password" });
+          .json({ message: "Invalid username or password", success: false });
       }
     }
   });
 };
 
+/*
+Controller for registration of a company
+localhost:3000/api/auth/company_register
+*/
 export const company_register = async (req, res) => {
   // get company data from request body
   const { company_name, company_email, company_address, password } = req.body;
@@ -64,21 +81,21 @@ export const company_register = async (req, res) => {
   const sql_check = `SELECT * FROM company WHERE company_email = '${company_email}'`;
   connectDB.query(sql_check, (err, result) => {
     if (err) {
-      res.status(400).json({ message: "Something went wrong" });
+      res.status(400).json({ message: "Something went wrong", success: false });
       console.log(err);
       return;
     } else {
       if (result.length > 0) {
-        res.status(400).json({ message: "Company already exists" });
+        res
+          .status(400)
+          .json({ message: "Company already exists", success: false });
         return;
       }
     }
   });
-
   //   hash password
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = bcrypt.hashSync(password, salt);
-
   //   insert company data
   const sql_company = `INSERT INTO company (company_name,company_email,company_address, password) VALUES ('${company_name}', '${company_email}', '${company_address}', '${hashedPassword}')`;
   connectDB.query(sql_company, (err, result) => {
@@ -90,84 +107,19 @@ export const company_register = async (req, res) => {
       const sql_login = `INSERT INTO login (email, password,status) VALUES ( '${company_email}', '${hashedPassword}',0)`;
       connectDB.query(sql_login, (err, result_sqlLogin) => {
         if (err) {
-          res.status(400).json({ message: "Something went wrong" });
+          res
+            .status(400)
+            .json({ message: "Something went wrong", success: false });
           console.log(err);
           return;
         } else {
           return res.status(200).json({
             result_sqlLogin,
             message: "Registration details sent to Admin",
+            success: true,
           });
         }
       });
     }
   });
 };
-
-// export const superAdmin_login = (req, res) => {
-//   const { admin_email, password } = req.body;
-
-//   const sql_checkCredentials = `SELECT * FROM superadmin WHERE admin_email = '${admin_email}'`;
-//   connectDB.query(sql_checkCredentials, (err, result) => {
-//     if (err) {
-//       console.log(err);
-//       return;
-//     } else {
-//       if (result.length > 0) {
-//         const decryptedPassword = bcrypt.compareSync(
-//           password,
-//           result[0].admin_password
-//         );
-//         if (!decryptedPassword) {
-//           return res
-//             .status(401)
-//             .json({ message: "Invalid username or password" });
-//         }
-
-//         res.status(401).json({ message: "Welcome Super Admin!" });
-//       } else {
-//         res.status(401).json({ message: "Invalid username or password" });
-//       }
-//     }
-//   });
-// };
-
-// export const company_login = (req, res) => {
-//   const { company_website, password } = req.body;
-
-//   const sql_checkCredentials = `SELECT * FROM company WHERE company_website = '${company_website}'`;
-//   connectDB.query(sql_checkCredentials, (err, result) => {
-//     if (err) {
-//       console.log(err);
-//       return;
-//     } else {
-//       if (result.length > 0) {
-//         const decryptedPassword = bcrypt.compareSync(
-//           password,
-//           result[0].password
-//         );
-//         if (!decryptedPassword) {
-//           return res
-//             .status(401)
-//             .json({ message: "Invalid username or password" });
-//         }
-//         const sql_checkStatus = `SELECT * FROM company_login WHERE company_website = '${company_website}'`;
-//         connectDB.query(sql_checkStatus, (err, result_status) => {
-//           if (err) {
-//             console.log(err);
-//             return;
-//           } else {
-//             if (result_status[0].status === 0) {
-//               return res.status(200).json(result_status);
-//             }
-//             return res
-//               .status(401)
-//               .json({ message: "Your account is not active" });
-//           }
-//         });
-//       } else {
-//         res.status(401).json({ message: "Invalid username or password" });
-//       }
-//     }
-//   });
-// };

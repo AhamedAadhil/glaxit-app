@@ -4,6 +4,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/*
+Seed the admin info into the database directly without creating an API endpoint - security purpose
+*/
 const seedAdmin = async () => {
   const currentDate = new Date();
   const formatedDate = currentDate.toISOString().slice(0, 19).replace("T", " ");
