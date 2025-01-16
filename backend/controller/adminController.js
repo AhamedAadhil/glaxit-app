@@ -27,7 +27,25 @@ localhost:3000/api/admin/get_pending_approvels
 */
 export const getPendingApprovels = (req, res) => {
   try {
-    const sql = `SELECT * FROM login WHERE status = 0`;
+    // SQL query to join login and company tables
+    const sql = `
+      SELECT 
+        login.login_id AS login_id,
+        login.email,
+        login.status,
+        company.company_id,
+        company.company_name,
+        company.company_address,
+        company.company_email
+      FROM 
+        login
+      INNER JOIN 
+        company
+      ON 
+        login.email = company.company_email
+      WHERE 
+        login.status = 0
+    `;
     connectDB.query(sql, (err, result) => {
       if (err) {
         return res.status(500).json({ message: err.message, success: false });
@@ -78,6 +96,38 @@ export const toggleStatus = (req, res) => {
           });
         }
       });
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, success: false });
+  }
+};
+
+export const getAllCompanies = (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        login.login_id AS login_id,
+        login.email,
+        login.status,
+        company.company_id,
+        company.company_name,
+        company.company_address,
+        company.company_email
+      FROM 
+        login
+      INNER JOIN 
+        company
+      ON 
+        login.email = company.company_email
+      WHERE 
+        login.status = 1
+    `;
+    connectDB.query(sql, (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: err.message, success: false });
+      } else {
+        return res.status(200).json({ data: result, success: true });
+      }
     });
   } catch (error) {
     return res.status(500).json({ message: error.message, success: false });

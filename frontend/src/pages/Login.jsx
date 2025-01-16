@@ -21,13 +21,17 @@ const Login = () => {
     try {
       const response = await axios.post(
         "http://localhost:3000/api/auth/login",
-        formData
+        formData,
+        {
+          withCredentials: true,
+        }
       );
       const data = response?.data;
+      const role = response?.data?.role;
       if (data?.success) {
         localStorage.setItem("token", data.token);
         toast.success(`Welcome!`);
-        navigate("/");
+        role === "Company" ? navigate("/company") : navigate("/admin");
       } else {
         toast.error(data.message || "Login failed!");
       }
@@ -83,7 +87,7 @@ const Login = () => {
             />
           </div>
           <div className="text-center text-sm">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link to={"/register"} className="underline text-blue-600">
               Register your company
             </Link>
