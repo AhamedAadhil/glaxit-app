@@ -152,3 +152,76 @@ export const logout = (req, res) => {
   res.clearCookie("token");
   res.status(200).json({ message: "Logout successful", success: true });
 };
+
+/*
+Controller for change password
+localhost:3000/api/auth/update_password
+*/
+export const updatePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const { email } = req.user;
+
+    // Verify if the user exists in the login table
+    const sql_verify = `SELECT * FROM login WHERE email = ?`;
+    connectDB.query(sql_verify, [email], async (err, result_verify) => {
+      if (err) {
+        return res.status(500).json({ message: err.message, success: false });
+      }
+
+      if (result_verify.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "Account not found", success: false });
+      }
+
+      const user = result_verify[0];
+
+      // Check if the current password matches
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res
+          .status(400)
+          .json({ message: "Incorrect current password", success: false });
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update the password in the company table
+      const sql_updateCompany = `UPDATE company SET password = ? WHERE company_email = ?`;
+      connectDB.query(
+        sql_updateCompany,
+        [hashedPassword, email],
+        (err, result_updateCompany) => {
+          if (err) {
+            return res
+              .status(500)
+              .json({ message: err.message, success: false });
+          }
+
+          // Update the password in the login table
+          const sql_updateLogin = `UPDATE login SET password = ? WHERE email = ?`;
+          connectDB.query(
+            sql_updateLogin,
+            [hashedPassword, email],
+            (err, result_updateLogin) => {
+              if (err) {
+                return res
+                  .status(500)
+                  .json({ message: err.message, success: false });
+              }
+
+              return res.status(200).json({
+                message: "Password updated successfully",
+                success: true,
+              });
+            }
+          );
+        }
+      );
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, success: false });
+  }
+};

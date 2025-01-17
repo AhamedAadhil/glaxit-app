@@ -8,8 +8,9 @@ import Company from "./pages/Company";
 import PendingRequests from "./pages/PendingRequests";
 import Companies from "./pages/Companies";
 
-import AdminLayout from "./components/layouts/AdminLayout";
+import MainLayout from "./components/layouts/MainLayout";
 import PrivateRoutes from "./components/privateRoutes/PrivateRoutes";
+import Settings from "./pages/Settings";
 
 export default function App() {
   return (
@@ -23,18 +24,23 @@ export default function App() {
           path="/admin"
           element={<PrivateRoutes allowedRole="Super Admin" />}
         >
-          <Route path="/admin" element={<AdminLayout />}>
+          <Route path="/admin" element={<MainLayout />}>
             <Route index element={<Admin />} />
             <Route path="pending_requests" element={<PendingRequests />} />
             <Route path="companies" element={<Companies />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
         </Route>
 
+        {/* Company routes */}
         <Route
           path="/company"
           element={<PrivateRoutes allowedRole="Company" />}
         >
-          <Route path="/company" element={<Company />} />
+          <Route path="/company" element={<MainLayout />}>
+            <Route index element={<Company />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
         </Route>
       </Routes>
 

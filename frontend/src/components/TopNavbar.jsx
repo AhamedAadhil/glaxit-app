@@ -1,23 +1,11 @@
-import axios from "axios";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { handleLogout } from "../../utils/handleLogout";
 
 const TopNavbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = async () => {
-    const response = await axios.post(
-      "http://localhost:3000/api/auth/logout",
-      {},
-      { withCredentials: true }
-    );
-    if (response.data.success) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("email");
-      localStorage.removeItem("role");
-      window.location.reload();
-    }
-  };
+  const currentUserEmail = localStorage.getItem("email");
 
   return (
     <nav className="bg-gray-800 text-white w-full">
@@ -35,7 +23,15 @@ const TopNavbar = () => {
               className=" bg-gray-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-500"
             >
               <div className="flex gap-2 justify-center items-center">
-                <span>Admin</span>
+                <img
+                  className="inline-block size-6 rounded-full ring-2 ring-white"
+                  src={
+                    currentUserEmail === "4dm1n@example.com"
+                      ? "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250"
+                      : "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/M%C3%BCnster%2C_LVM%2C_B%C3%BCrogeb%C3%A4ude_--_2013_--_5149-51.jpg/1200px-M%C3%BCnster%2C_LVM%2C_B%C3%BCrogeb%C3%A4ude_--_2013_--_5149-51.jpg"
+                  }
+                />
+                <span>{currentUserEmail}</span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className={`w-4 h-4 transform transition-transform ${

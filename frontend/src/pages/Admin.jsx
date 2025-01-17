@@ -27,8 +27,8 @@ const Admin = () => {
 
       const data = [
         { name: "Total Companies", value: total_companies },
-        { name: "Pending Companies", value: pending_companies },
-        { name: "Approved Companies", value: approved_companies },
+        { name: "Pending", value: pending_companies },
+        { name: "Approved", value: approved_companies },
       ];
       setChartData(data);
     } catch (error) {
