@@ -17,7 +17,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data:", formData);
     try {
       const response = await axios.post(
         "http://localhost:3000/api/auth/login",
@@ -30,14 +29,15 @@ const Login = () => {
       const role = response?.data?.role;
       if (data?.success) {
         localStorage.setItem("token", data.token);
+        localStorage.setItem("email", data.info.email);
+        localStorage.setItem("role", data.role);
         toast.success(`Welcome!`);
         role === "Company" ? navigate("/company") : navigate("/admin");
       } else {
         toast.error(data.message || "Login failed!");
       }
-      console.log(data);
     } catch (error) {
-      toast.error(error.response?.data?.message);
+      toast.error(error.response?.data?.message || "Login failed!");
       console.error(error.response?.data?.message);
     }
   };

@@ -1,6 +1,7 @@
 import express from "express";
 
 import {
+  adminDashboard,
   getAllCompanies,
   getInfoByToken,
   getPendingApprovels,
@@ -15,6 +16,7 @@ const router = express.Router();
 router.get("/get_info_by_token", isValidToken, isAdmin, getInfoByToken);
 router.get("/get_pending_requests", isValidToken, isAdmin, getPendingApprovels);
 router.get("/all_companies", isValidToken, isAdmin, getAllCompanies);
+router.get("/dashboard", isValidToken, isAdmin, adminDashboard);
 
 // PATCH APIs
 router.patch("/toggle_status", isValidToken, isAdmin, toggleStatus);

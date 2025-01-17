@@ -77,8 +77,28 @@ localhost:3000/api/auth/company_register
 export const company_register = async (req, res) => {
   // get company data from request body
   const { company_name, company_email, company_address, password } = req.body;
+  // get document from request file
+  const document = req.file;
+  if (
+    !company_name ||
+    !company_address ||
+    !company_email ||
+    !password ||
+    !document
+  ) {
+    return res
+      .status(400)
+      .json({ message: "All fields are required", success: false });
+  }
+  // generate file path url of document
+  let filePath = "";
+  if (document) {
+    filePath =
+      req.protocol + "://" + req.get("host") + "/uploads/" + document.filename;
+  }
   //   check if company exists
   const sql_check = `SELECT * FROM company WHERE company_email = '${company_email}'`;
+  // console.log(document.path);
   connectDB.query(sql_check, (err, result) => {
     if (err) {
       res.status(400).json({ message: "Something went wrong", success: false });
@@ -97,7 +117,7 @@ export const company_register = async (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = bcrypt.hashSync(password, salt);
   //   insert company data
-  const sql_company = `INSERT INTO company (company_name,company_email,company_address, password) VALUES ('${company_name}', '${company_email}', '${company_address}', '${hashedPassword}')`;
+  const sql_company = `INSERT INTO company (company_name,company_email,company_address, password,document_path) VALUES ('${company_name}', '${company_email}', '${company_address}', '${hashedPassword}', '${filePath}')`;
   connectDB.query(sql_company, (err, result) => {
     if (err) {
       console.log(err);
@@ -122,4 +142,13 @@ export const company_register = async (req, res) => {
       });
     }
   });
+};
+
+/*
+Controller for logout (simply clear the cookie)
+localhost:3000/api/auth/logout
+*/
+export const logout = (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Logout successful", success: true });
 };

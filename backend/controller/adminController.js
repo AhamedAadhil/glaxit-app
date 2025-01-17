@@ -133,3 +133,28 @@ export const getAllCompanies = (req, res) => {
     return res.status(500).json({ message: error.message, success: false });
   }
 };
+
+export const adminDashboard = (req, res) => {
+  try {
+    const sql = `SELECT 
+  COUNT(*) AS total_companies,
+  SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) AS pending_companies,
+  SUM(CASE WHEN status =  1 THEN 1 ELSE 0 END) AS approved_companies
+FROM login WHERE isadmin = 0;
+`;
+    connectDB.query(sql, (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: err.message, success: false });
+      } else {
+        return res.status(200).json({
+          total_companies: result[0].total_companies,
+          pending_companies: result[0].pending_companies,
+          approved_companies: result[0].approved_companies,
+          success: true,
+        });
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, success: false });
+  }
+};

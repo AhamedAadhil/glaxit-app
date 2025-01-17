@@ -1,41 +1,70 @@
 import axios from "axios";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     company_name: "",
     company_email: "",
     password: "",
     company_address: "",
+    document: null,
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+    const { name, value, files } = e.target;
 
+    if (name === "document") {
+      setFormData({ ...formData, document: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data:", formData);
+
+    // Ensure that formData.document has a file before appending
+    if (!formData.document) {
+      toast.error("Please upload a PDF document.");
+      return;
+    }
+
+    // Use FormData to handle file uploads
+    const formDataToSend = new FormData();
+    formDataToSend.append("company_name", formData.company_name);
+    formDataToSend.append("company_email", formData.company_email);
+    formDataToSend.append("password", formData.password);
+    formDataToSend.append("company_address", formData.company_address);
+    formDataToSend.append("document", formData.document); // Attach file
     try {
       const response = await axios.post(
         "http://localhost:3000/api/auth/company_register",
-        formData
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       const data = response?.data;
       if (data?.success) {
         toast.success(data.message || "Registration details sent to admin!");
+        setFormData({
+          company_name: "",
+          company_email: "",
+          password: "",
+          company_address: "",
+          document: null,
+        });
+        navigate("/login");
       } else {
         toast.error(data.message || "Registraion failed!");
       }
-      console.log(data);
     } catch (error) {
-      toast.error(error.response?.data?.message);
-      console.error(error.response?.data?.message);
+      toast.error(error.response?.data?.message || error.message);
+      console.error(error.response?.data?.message || error.message);
     }
   };
 
@@ -117,6 +146,24 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange}
               required
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          {/* Document */}
+          <div>
+            <label
+              htmlFor="document"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Upload Document (PDF)
+            </label>
+            <input
+              type="file"
+              id="document"
+              name="document"
+              accept=".pdf"
+              required
+              onChange={handleChange}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
